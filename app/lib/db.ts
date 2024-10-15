@@ -1,10 +1,9 @@
-import Database from 'better-sqlite3';
+import SQLite3, { Database } from 'better-sqlite3';
 
-export default {
-	Connect: () => {
-		const db = new Database('valkyrie.db');
-		db.pragma('journal_mode = WAL');
+let database: Database;
 
-		return db.name;
-	},
-};
+export async function dbOpen() {
+	database = new SQLite3('valkyrie.db');
+	database.pragma('journal_mode = WAL');
+	return database;
+}
