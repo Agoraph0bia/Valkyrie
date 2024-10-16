@@ -23,7 +23,7 @@ const Breadcrumbs = () => {
         {pathArray.map((link, idx) => {
           return (
             <>
-              {<>{'>'}</>}
+              {'>'}
               <li key={idx + 1} className="mx-3">
                 <Link href={link.href}>
                   {link.crumb.replaceAll('/', ' > ')}
