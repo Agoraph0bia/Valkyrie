@@ -12,11 +12,13 @@
     "@tanstack/react-table": "^8.17.3",
     "@types/slonik": "^22.1.11",
     "better-sqlite3": "^11.3.0",
+    "bullmq": "^5.21.1",
     "next": "^14.2.3",
     "nodemon": "^3.1.0",
     "react": "^18",
     "react-dom": "^18",
-    "slonik": "^45.4.1"
+    "slonik": "^45.4.1",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.11",
