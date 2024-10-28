@@ -9,22 +9,7 @@ export const GET = async (
   const redis = await connect();
   const queue = new Queue(params.server);
 
-  redis.defineCommand('getMonitors', {
-    numberOfKeys: 0,
-    readOnly: true,
-    lua: `local monitorNames = redis.call("ZRANGE", "bull:${params.server}:repeat", 0, -1, "WITHSCORES")
-
-		  local result = {}
-		  for i,v in pairs(monitorNames) do
-		    if(monitorNames[i + 1] ~= nil ) then
-			  local data = redis.call("HGETALL", "bull:${params.server}:repeat:" .. monitorNames[i] .. ":" .. monitorNames[i + 1])
-			  table.insert(result, data)
-		    end
-		  end
-		  return result`.replace(/\n/g, ' '),
-  });
-
-  const result = await redis.getMonitors();
+  const result = await redis.getMonitors(params.server);
 
   const monitors = result
     .filter((m: string[]) => m.length > 0)

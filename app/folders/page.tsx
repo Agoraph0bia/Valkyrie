@@ -1,12 +1,12 @@
 'use client';
 
 import ContentsTable from './FolderContentsTable';
-import Header from '../shared/components/Header';
-import SearchBar from '../shared/components/SearchBar';
+import Header from '../components/Header';
+import SearchBar from '../components/SearchBar';
 import Image from 'next/image';
 import listViewIcon from './assets/listview.svg';
 import gridViewIcon from './assets/gridview.svg';
-import Breadcrumbs from '../shared/components/Breadcrumbs';
+import Breadcrumbs from '../components/Breadcrumbs';
 
 export default function Page({ items }: any) {
   return (

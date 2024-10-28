@@ -1,5 +1,5 @@
 import ContentsTable from '../FolderContentsTable';
-import Breadcrumbs from '../../shared/components/Breadcrumbs';
+import Breadcrumbs from '../../components/Breadcrumbs';
 
 export default async function Page({ params }: { params: { slug: number } }) {
   return (
