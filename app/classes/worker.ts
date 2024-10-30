@@ -1,13 +1,24 @@
 import { Worker, Job, FlowProducer, JobNode } from 'bullmq';
-import { Action } from './valkyrie';
+import { Valkyrie } from './valkyrie';
+import { ActionBase } from './action';
 
-const monitorWorker = new Worker('monitor', async (job: Job) => {});
+export type Result = {};
 
 const actionWorker = new Worker('action', async (job: Job) => {
-  await waitAction();
-  return;
+	const valkyrie = new Valkyrie('action');
+
+	(job.data.actions as ActionBase[])
+		.map((a) => a.function as any)
+		.reduce((resultPromise, fn) => {
+			try {
+				return resultPromise?.then(fn);
+			} catch (e) {
+				return e;
+			}
+		}, Promise.resolve([]));
+	return;
 });
 
 const waitAction = () => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+	return new Promise((resolve) => setTimeout(resolve, ms));
 };

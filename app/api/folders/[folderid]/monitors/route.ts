@@ -19,7 +19,7 @@ export const PUT = async (
 ) => {
 	const valkyrie = new Valkyrie();
 
-	const { name, server, pattern, retries } = await request.json();
+	const { name, pattern, retries, actions } = await request.json();
 	const results = await valkyrie.createMonitor(
 		params.folderid,
 		name,
@@ -27,7 +27,7 @@ export const PUT = async (
 			pattern: pattern,
 			retries: retries,
 		},
-		[]
+		actions
 	);
 
 	return Response.json(results);
