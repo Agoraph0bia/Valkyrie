@@ -37,6 +37,8 @@ export type ActionOptions = {
   retryDelay?: number;
 };
 
+export type Condition = {};
+
 export type Action = {
   id?: string;
   name: string;
@@ -78,6 +80,7 @@ export class Valkyrie {
             delay: options.retryDelay,
           },
         },
+        data: { actions: actions },
       }
     );
 
