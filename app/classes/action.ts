@@ -7,7 +7,16 @@ export type IAction = {
 	type: string;
 	conditions: any[];
 	options: any;
-	function?: Promise<any>;
+	function: Promise<any>;
+	results: any[];
+};
+
+export type ActionBaseOptions = {
+	timeout?: number;
+};
+
+export type WaitActionOptions = {
+	waitTIme: number;
 };
 
 export class ActionBase implements IAction {
@@ -15,9 +24,10 @@ export class ActionBase implements IAction {
 	public name!: string;
 	public Flow!: Flow;
 	public type!: string;
-	public conditions!: any[];
-	public options: any;
-	public function?: Promise<any>;
+	public conditions: any[] = [];
+	public options!: ActionBaseOptions;
+	public function!: Promise<any>;
+	public results: any[] = [];
 
 	constructor(args: IAction) {
 		Object.assign(this, args);
@@ -27,83 +37,71 @@ export class ActionBase implements IAction {
 export class WaitAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.WaitAction(this.options.waitMS);
+		this.function = this.WaitAction(this.options, this.results);
 	}
 
-	WaitAction = async (ms: number): Promise<boolean> =>
-		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+	WaitAction = async (options: any, results: any[]): Promise<any[]> =>
+		new Promise((resolve) => {
+			setTimeout(() => resolve(results), options.timeout);
 		});
 }
 
 export class SMTPAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.SMTPAction(this.options.waitMS);
+		this.function = this.SMTPAction(this.options, this.results);
 	}
 
-	SMTPAction = async (ms: number): Promise<boolean> =>
+	SMTPAction = async (options: any, result: any): Promise<boolean> =>
 		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+			res(result);
 		});
 }
 
 export class RESTAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.RESTAction(this.options.waitMS);
+		this.function = this.RESTAction(this.options, this.results);
 	}
 
-	RESTAction = async (ms: number): Promise<boolean> =>
+	RESTAction = async (options: any, result: any): Promise<boolean> =>
 		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+			res(result);
 		});
 }
 
 export class QueryAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.QueryAction(this.options.waitMS);
+		this.function = this.QueryAction(this.options, this.results);
 	}
 
-	QueryAction = async (ms: number): Promise<boolean> =>
+	QueryAction = async (options: any, result: any): Promise<boolean> =>
 		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+			res(result);
 		});
 }
 
 export class ScriptAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.ScriptAction(this.options.waitMS);
+		this.function = this.ScriptAction(this.options, this.results);
 	}
 
-	ScriptAction = async (ms: number): Promise<boolean> =>
+	ScriptAction = async (options: any, result: any): Promise<boolean> =>
 		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+			res(result);
 		});
 }
 
 export class DataTransformAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.DataTransformAction(this.options.waitMS);
+		this.function = this.DataTransformAction(this.options, this.results);
 	}
 
-	DataTransformAction = async (ms: number): Promise<boolean> =>
+	DataTransformAction = async (options: any, result: any): Promise<boolean> =>
 		new Promise((res) => {
-			setTimeout(() => {
-				res(true);
-			}, ms);
+			res(result);
 		});
 }

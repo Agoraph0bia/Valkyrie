@@ -4,21 +4,13 @@ import { ActionBase } from './action';
 
 export type Result = {};
 
-const actionWorker = new Worker('action', async (job: Job) => {
-	const valkyrie = new Valkyrie('action');
+export const actionWorker = new Worker('action', async (job: Job) => {
+	let jobData = job.data;
 
-	(job.data.actions as ActionBase[])
-		.map((a) => a.function as any)
-		.reduce((resultPromise, fn) => {
-			try {
-				return resultPromise?.then(fn);
-			} catch (e) {
-				return e;
-			}
-		}, Promise.resolve([]));
-	return;
+	setTimeout(() => {
+		(jobData.actions as ActionBase[])
+			.map((action: ActionBase) => action.function)
+			.reduce((prev, func) => prev.then((result: []) => func)),
+			Promise.resolve([]);
+	}, jobData.timeout ?? 2 * 60 * 60 * 1000);
 });
-
-const waitAction = (ms: number) => {
-	return new Promise((resolve) => setTimeout(resolve, ms));
-};
