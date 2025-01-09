@@ -1,9 +1,9 @@
-import { Monitor } from './valkyrie';
+import { Flow } from './flow';
 
 export type IAction = {
 	id?: string;
 	name: string;
-	monitor: Monitor;
+	Flow: Flow;
 	type: string;
 	conditions: any[];
 	options: any;
@@ -13,7 +13,7 @@ export type IAction = {
 export class ActionBase implements IAction {
 	public id?: string;
 	public name!: string;
-	public monitor!: Monitor;
+	public Flow!: Flow;
 	public type!: string;
 	public conditions!: any[];
 	public options: any;
@@ -27,10 +27,10 @@ export class ActionBase implements IAction {
 export class WaitAction extends ActionBase {
 	constructor(args: IAction) {
 		super(args);
-		this.function = this.waitAction(this.options.waitMS);
+		this.function = this.WaitAction(this.options.waitMS);
 	}
 
-	waitAction = async (ms: number): Promise<boolean> =>
+	WaitAction = async (ms: number): Promise<boolean> =>
 		new Promise((res) => {
 			setTimeout(() => {
 				res(true);
@@ -38,12 +38,72 @@ export class WaitAction extends ActionBase {
 		});
 }
 
-export interface SMTPAction extends ActionBase {}
+export class SMTPAction extends ActionBase {
+	constructor(args: IAction) {
+		super(args);
+		this.function = this.SMTPAction(this.options.waitMS);
+	}
 
-export interface RESTAction extends ActionBase {}
+	SMTPAction = async (ms: number): Promise<boolean> =>
+		new Promise((res) => {
+			setTimeout(() => {
+				res(true);
+			}, ms);
+		});
+}
 
-export interface QueryAction extends ActionBase {}
+export class RESTAction extends ActionBase {
+	constructor(args: IAction) {
+		super(args);
+		this.function = this.RESTAction(this.options.waitMS);
+	}
 
-export interface ScriptAction extends ActionBase {}
+	RESTAction = async (ms: number): Promise<boolean> =>
+		new Promise((res) => {
+			setTimeout(() => {
+				res(true);
+			}, ms);
+		});
+}
 
-export interface DataTransformAction extends ActionBase {}
+export class QueryAction extends ActionBase {
+	constructor(args: IAction) {
+		super(args);
+		this.function = this.QueryAction(this.options.waitMS);
+	}
+
+	QueryAction = async (ms: number): Promise<boolean> =>
+		new Promise((res) => {
+			setTimeout(() => {
+				res(true);
+			}, ms);
+		});
+}
+
+export class ScriptAction extends ActionBase {
+	constructor(args: IAction) {
+		super(args);
+		this.function = this.ScriptAction(this.options.waitMS);
+	}
+
+	ScriptAction = async (ms: number): Promise<boolean> =>
+		new Promise((res) => {
+			setTimeout(() => {
+				res(true);
+			}, ms);
+		});
+}
+
+export class DataTransformAction extends ActionBase {
+	constructor(args: IAction) {
+		super(args);
+		this.function = this.DataTransformAction(this.options.waitMS);
+	}
+
+	DataTransformAction = async (ms: number): Promise<boolean> =>
+		new Promise((res) => {
+			setTimeout(() => {
+				res(true);
+			}, ms);
+		});
+}

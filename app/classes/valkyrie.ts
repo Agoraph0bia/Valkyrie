@@ -7,6 +7,7 @@ import {
 } from 'bullmq';
 import { connect } from '../lib/db';
 import IORedis, { ChainableCommander, Result } from 'ioredis';
+import { Flow, FlowOptions } from './flow';
 import { ActionBase } from './action';
 
 // Add declarations
@@ -15,20 +16,6 @@ declare module 'ioredis' {
 		getMonitors(folderid: string): Result<[], Context>;
 	}
 }
-
-export type MonitorOptions = {
-	pattern: string;
-	startDate?: Date;
-	endDate?: Date;
-	retries: number;
-	retryDelay?: number;
-};
-
-export type Monitor = {
-	id: string;
-	name: string;
-	options: MonitorOptions;
-};
 
 export class Valkyrie {
 	private redis: IORedis;
@@ -42,7 +29,7 @@ export class Valkyrie {
 	async createMonitor(
 		folderid: number,
 		name: string,
-		options: MonitorOptions,
+		options: FlowOptions,
 		actions: ActionBase[]
 	) {
 		const jobScheduler = await this.queue.upsertJobScheduler(
@@ -62,7 +49,7 @@ export class Valkyrie {
 						delay: options.retryDelay,
 					},
 				},
-				data: { actions: actions },
+				data: { folderid: folderid, monitor: name, actions: actions },
 			}
 		);
 
@@ -71,11 +58,12 @@ export class Valkyrie {
 		// } as Monitor;
 	}
 
-	async getFolders(folderid: number) {
+	async getFolders(folderid: number): Promise<any[]> {
 		this.redis.hgetall(`valkyrie:folders:${folderid}*:*`);
+		return [];
 	}
 
-	async getMonitors(folderid: number): Promise<Monitor[]> {
+	async getFlows(folderid: number): Promise<Flow[]> {
 		const stream = this.redis.scanStream({
 			match: `bull:valkyrie:repeat:${folderid}%%*:*`,
 			type: 'hash',
@@ -83,7 +71,6 @@ export class Valkyrie {
 		});
 
 		var pipeline = this.redis.pipeline();
-		var returnvalue;
 
 		return new Promise((resolve, reject) => {
 			stream
@@ -95,15 +82,19 @@ export class Valkyrie {
 				.on('end', async () => {
 					const results = await pipeline.exec();
 
-					const monitors = results?.map((m) => {
+					const flows = results?.map((m) => {
 						const [err, value] = m;
 						if (err) reject(err);
-						return value as Monitor;
+						return value as Flow;
 					});
 
-					resolve(monitors ?? []);
+					resolve(flows ?? []);
 				});
 		});
+	}
+
+	getActions(folderid: number, monitor: string) {
+		throw new Error('Method not implemented.');
 	}
 
 	async getFolderContents(folderid: number) {

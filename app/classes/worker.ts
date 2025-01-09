@@ -19,6 +19,6 @@ const actionWorker = new Worker('action', async (job: Job) => {
 	return;
 });
 
-const waitAction = () => {
+const waitAction = (ms: number) => {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 };
