@@ -1,107 +1,153 @@
 import { Flow } from './flow';
+import { ConditionBase } from './condition';
 
-export type IAction = {
+interface IAction<ActionResult> {
 	id?: string;
 	name: string;
-	Flow: Flow;
+	flow: Flow;
 	type: string;
-	conditions: any[];
-	options: any;
-	function: Promise<any>;
-	results: any[];
-};
+	conditions: ConditionBase[];
+	options: ActionBaseOptions;
+	action(prevResults: ActionResult[]): Promise<ActionResult>;
+}
 
 export type ActionBaseOptions = {
 	timeout?: number;
+	cancelOnError?: boolean;
 };
 
 export type WaitActionOptions = {
-	waitTIme: number;
+	waitTime: number;
+} & ActionBaseOptions;
+
+export type ActionResult = {
+	action: ActionBase;
+	data: any;
+	success: boolean;
+	error?: string | unknown;
 };
 
-export class ActionBase implements IAction {
+export abstract class ActionBase implements IAction<ActionResult> {
 	public id?: string;
 	public name!: string;
-	public Flow!: Flow;
+	public flow!: Flow;
 	public type!: string;
-	public conditions: any[] = [];
-	public options!: ActionBaseOptions;
-	public function!: Promise<any>;
-	public results: any[] = [];
+	public conditions: ConditionBase[] = [];
+	public options: ActionBaseOptions = {};
+	public abstract action(prevResults: ActionResult[]): Promise<ActionResult>;
 
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		Object.assign(this, args);
 	}
+
+	// protected withTimeout(
+	// 	promise: Promise<ActionResult>,
+	// 	timeout: number
+	// ): Promise<ActionResult> {
+	// 	return new Promise((resolve, reject) => {
+	// 		const timer = setTimeout(
+	// 			() => reject({ success: false, error: 'Timeout' }),
+	// 			timeout
+	// 		);
+	// 		promise
+	// 			.then((result) => {
+	// 				clearTimeout(timer);
+	// 				resolve(result);
+	// 			})
+	// 			.catch((error) => {
+	// 				clearTimeout(timer);
+	// 				reject(error);
+	// 			});
+	// 	});
+	// }
 }
 
 export class WaitAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.WaitAction(this.options, this.results);
 	}
 
-	WaitAction = async (options: any, results: any[]): Promise<any[]> =>
-		new Promise((resolve) => {
-			setTimeout(() => resolve(results), options.timeout);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise<ActionResult>((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
 
 export class SMTPAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.SMTPAction(this.options, this.results);
 	}
 
-	SMTPAction = async (options: any, result: any): Promise<boolean> =>
-		new Promise((res) => {
-			res(result);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
 
 export class RESTAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.RESTAction(this.options, this.results);
 	}
 
-	RESTAction = async (options: any, result: any): Promise<boolean> =>
-		new Promise((res) => {
-			res(result);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
 
 export class QueryAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.QueryAction(this.options, this.results);
 	}
 
-	QueryAction = async (options: any, result: any): Promise<boolean> =>
-		new Promise((res) => {
-			res(result);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
 
 export class ScriptAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.ScriptAction(this.options, this.results);
 	}
 
-	ScriptAction = async (options: any, result: any): Promise<boolean> =>
-		new Promise((res) => {
-			res(result);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
 
 export class DataTransformAction extends ActionBase {
-	constructor(args: IAction) {
+	constructor(args: IAction<ActionResult>) {
 		super(args);
-		this.function = this.DataTransformAction(this.options, this.results);
 	}
 
-	DataTransformAction = async (options: any, result: any): Promise<boolean> =>
-		new Promise((res) => {
-			res(result);
+	action(prevResults: ActionResult[]): Promise<ActionResult> {
+		let test = prevResults;
+		return new Promise((resolve) => {
+			setTimeout(() =>
+				resolve({ action: this, data: {}, success: true } as ActionResult)
+			);
 		});
+	}
 }
