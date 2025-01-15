@@ -1,17 +1,6 @@
 import { SandboxedJob } from 'bullmq';
 import { ActionBase, ActionResult } from '../classes/action';
-
-export abstract class JobBase {
-	public id!: string;
-	public name!: string;
-	public actions: ActionBase[] = [];
-	public options!: FlowOptions;
-	public status: string = 'New';
-
-	constructor(args: IJob) {
-		Object.assign(this, args);
-	}
-}
+import { FlowOptions } from './flow';
 
 export const flowJob = async (job: SandboxedJob) => {
 	let jobData = job.data;

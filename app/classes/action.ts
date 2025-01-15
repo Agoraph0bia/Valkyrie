@@ -5,10 +5,8 @@ interface IAction<ActionResult> {
 	id?: string;
 	name: string;
 	flow: Flow;
-	type: string;
 	conditions: ConditionBase[];
 	options: ActionBaseOptions;
-	action(prevResults: ActionResult[]): Promise<ActionResult>;
 }
 
 export type ActionBaseOptions = {
@@ -31,35 +29,12 @@ export abstract class ActionBase implements IAction<ActionResult> {
 	public id?: string;
 	public name!: string;
 	public flow!: Flow;
-	public type!: string;
 	public conditions: ConditionBase[] = [];
 	public options: ActionBaseOptions = {};
-	public abstract action(prevResults: ActionResult[]): Promise<ActionResult>;
 
 	constructor(args: IAction<ActionResult>) {
 		Object.assign(this, args);
 	}
-
-	// protected withTimeout(
-	// 	promise: Promise<ActionResult>,
-	// 	timeout: number
-	// ): Promise<ActionResult> {
-	// 	return new Promise((resolve, reject) => {
-	// 		const timer = setTimeout(
-	// 			() => reject({ success: false, error: 'Timeout' }),
-	// 			timeout
-	// 		);
-	// 		promise
-	// 			.then((result) => {
-	// 				clearTimeout(timer);
-	// 				resolve(result);
-	// 			})
-	// 			.catch((error) => {
-	// 				clearTimeout(timer);
-	// 				reject(error);
-	// 			});
-	// 	});
-	// }
 }
 
 export class WaitAction extends ActionBase {

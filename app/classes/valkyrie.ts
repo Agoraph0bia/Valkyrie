@@ -1,21 +1,8 @@
-import {
-	FlowProducer,
-	JobsOptions,
-	Queue,
-	QueueOptions,
-	RedisConnection,
-} from 'bullmq';
+import { Job, MetricsTime, Queue, Worker } from 'bullmq';
 import { connect } from '../lib/db';
 import IORedis, { ChainableCommander, Result } from 'ioredis';
 import { Flow, FlowOptions } from './flow';
-import { ActionBase } from './action';
-
-// Add declarations
-declare module 'ioredis' {
-	interface RedisCommander<Context> {
-		getMonitors(folderid: string): Result<[], Context>;
-	}
-}
+import { ActionBase, ActionResult } from './action';
 
 export class Valkyrie {
 	private redis: IORedis;
@@ -26,35 +13,31 @@ export class Valkyrie {
 		this.queue = new Queue(queue);
 	}
 
-	async createMonitor(
+	async CreateWorker() {
+		return new Worker<ActionResult[]>(
+			'FlowQueue',
+			`${__dirname}/workers/flowworker.js`,
+			{
+				useWorkerThreads: true,
+				connection: {},
+				metrics: {
+					maxDataPoints: MetricsTime.ONE_WEEK * 2,
+				},
+				name: '',
+			}
+		)
+			.on('progress', (job, progress) => {})
+			.on('failed', (job, error, prev) => {})
+			.on('error', (err) => {}); //This prevents node from throwing errors for jobs directly.
+	}
+
+	async CreateFlow(
 		folderid: number,
 		name: string,
 		options: FlowOptions,
 		actions: ActionBase[]
 	) {
-		const jobScheduler = await this.queue.upsertJobScheduler(
-			`${folderid}%%${name}`,
-			{
-				pattern: options.pattern,
-				immediately: options.startDate ? false : true,
-				startDate: options.startDate ? new Date(options.startDate) : undefined,
-				endDate: options.endDate ? new Date(options.endDate) : undefined,
-			},
-			{
-				name: name,
-				opts: {
-					attempts: options.retries,
-					backoff: {
-						type: 'fixed',
-						delay: options.retryDelay,
-					},
-				},
-				data: { folderid: folderid, monitor: name, actions: actions },
-			}
-		);
-
 		// return {
-
 		// } as Monitor;
 	}
 
@@ -63,38 +46,46 @@ export class Valkyrie {
 		return [];
 	}
 
-	async getFlows(folderid: number): Promise<Flow[]> {
+	async getFlows(folderid?: number): Promise<Flow[]> {
 		const stream = this.redis.scanStream({
-			match: `bull:valkyrie:repeat:${folderid}%%*:*`,
-			type: 'hash',
+			match: `${process.env.APP}:folders:${folderid ?? '*'}:flows:*`,
+			type: 'zset',
 			count: 1000,
 		});
 
 		var pipeline = this.redis.pipeline();
 
-		return new Promise((resolve, reject) => {
+		return new Promise<Flow[]>((resolve, reject) => {
 			stream
 				.on('data', async (keys) => {
 					keys?.forEach((k: string) => {
-						pipeline = pipeline.hgetall(k);
+						pipeline = pipeline.zrange(k, 0, -1);
 					});
 				})
 				.on('end', async () => {
 					const results = await pipeline.exec();
 
-					const flows = results?.map((m) => {
-						const [err, value] = m;
+					const flows = (results ?? []).map(([err, result]) => {
 						if (err) reject(err);
-						return value as Flow;
+
+						let flowArr = result as any[];
+
+						let flowData = JSON.parse(flowArr[0]);
+
+						let actions = flowArr.slice(1).map((a: string) => {});
+
+						return new Flow({
+							...flowData,
+							actions: actions,
+						});
 					});
 
-					resolve(flows ?? []);
+					resolve(flows);
+				})
+				.on('error', (error) => {
+					reject(error);
 				});
 		});
-	}
-
-	getActions(folderid: number, monitor: string) {
-		throw new Error('Method not implemented.');
 	}
 
 	async getFolderContents(folderid: number) {

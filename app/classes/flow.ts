@@ -4,6 +4,7 @@ import {
 	UnrecoverableError,
 	Worker,
 	SandboxedJob,
+	Queue,
 } from 'bullmq';
 import { ActionBase, ActionResult } from './action';
 
@@ -12,44 +13,70 @@ export type FlowOptions = {
 	startDate?: Date;
 	endDate?: Date;
 	retries: number;
-	retryDelay?: number;
 	timeout: number;
 };
 
-export type IFlow = {
+export interface IFlow {
 	id: string;
 	name: string;
+	folder: any;
 	options: FlowOptions;
 	actions: ActionBase[];
-};
+	queue: Queue;
+}
 
 export class Flow implements IFlow {
 	public id!: string;
 	public name!: string;
+	public folder: any;
 	public actions: ActionBase[] = [];
 	public options!: FlowOptions;
-	public status: string = 'New';
+	public status?: string;
+	public queue!: Queue;
 
 	constructor(args: IFlow) {
 		Object.assign(this, args);
 	}
 
-	Run = () => {
-		let results = new Worker<ActionResult[]>(
-			'FlowQueue',
-			`${__dirname}/workers/flowworker.js`,
+	AddAction = async () => {};
+
+	Start = async () => {
+		await this.queue.upsertJobScheduler(
+			this.id,
 			{
-				//Passing separate file path here
-				connection: {},
-				metrics: {
-					maxDataPoints: MetricsTime.ONE_WEEK * 2,
-				},
+				pattern: this.options.pattern,
+				immediately: this.options.startDate ? false : true,
+				startDate: this.options.startDate
+					? new Date(this.options.startDate)
+					: undefined,
+				endDate: this.options.endDate
+					? new Date(this.options.endDate)
+					: undefined,
+			},
+			{
 				name: this.name,
+				opts: {
+					attempts: this.options.retries,
+					backoff: {
+						type: 'fixed',
+					},
+				},
+				data: {
+					flow: this,
+					options: this.options,
+					actions: this.actions,
+				},
 			}
-		)
-			.on('progress', (job: Job, progress: number | object) => {})
-			.on('failed', (job: Job | undefined, error: Error, prev: string) => {})
-			.on('error', (err) => {}) //This prevents node from throwing errors for jobs directly.
-			.run();
+		);
+
+		this.status = 'Scheduled';
+		return this;
+	};
+
+	Stop = async () => {
+		await this.queue.removeJobScheduler(this.id);
+
+		this.status = 'Stopped';
+		return this;
 	};
 }
