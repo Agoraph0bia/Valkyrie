@@ -1,12 +1,6 @@
-import {
-	Job,
-	MetricsTime,
-	UnrecoverableError,
-	Worker,
-	SandboxedJob,
-	Queue,
-} from 'bullmq';
+import { Queue } from 'bullmq';
 import { ActionBase, ActionResult } from './action';
+import { Folder } from './valkyrie';
 
 export type FlowOptions = {
 	pattern: string;
@@ -28,7 +22,7 @@ export interface IFlow {
 export class Flow implements IFlow {
 	public id!: string;
 	public name!: string;
-	public folder: any;
+	public folder!: Folder;
 	public actions: ActionBase[] = [];
 	public options!: FlowOptions;
 	public status?: string;
@@ -37,8 +31,6 @@ export class Flow implements IFlow {
 	constructor(args: IFlow) {
 		Object.assign(this, args);
 	}
-
-	AddAction = async () => {};
 
 	Start = async () => {
 		await this.queue.upsertJobScheduler(

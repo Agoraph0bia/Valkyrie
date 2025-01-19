@@ -4,6 +4,12 @@ import IORedis, { ChainableCommander, Result } from 'ioredis';
 import { Flow, FlowOptions } from './flow';
 import { ActionBase, ActionResult } from './action';
 
+export type Folder = {
+	id: string;
+	name: string;
+	parentId: string;
+};
+
 export class Valkyrie {
 	private redis: IORedis;
 	private queue: Queue;
@@ -23,32 +29,48 @@ export class Valkyrie {
 				metrics: {
 					maxDataPoints: MetricsTime.ONE_WEEK * 2,
 				},
-				name: '',
 			}
 		)
 			.on('progress', (job, progress) => {})
+			.on('completed', (job, progress) => {})
 			.on('failed', (job, error, prev) => {})
 			.on('error', (err) => {}); //This prevents node from throwing errors for jobs directly.
 	}
 
-	async CreateFlow(
-		folderid: number,
-		name: string,
-		options: FlowOptions,
-		actions: ActionBase[]
-	) {
-		// return {
-		// } as Monitor;
+	async UpsertFlow(flowId: number, flow: Flow) {
+		let flowObject = [
+			[
+				JSON.stringify({
+					id: flowId,
+					name: flow.name,
+					folder: flow.folder,
+					options: flow.options,
+				}),
+				'0',
+			],
+		].concat(
+			flow.actions.map((a: ActionBase, index: number) => [
+				JSON.stringify(a),
+				(index + 1).toString(),
+			])
+		);
+
+		await this.redis.zadd(
+			`valkyrie:folders:${flow.folder.id}:flows:${flowId}`,
+			...flowObject.flat()
+		);
+
+		return this;
 	}
 
-	async getFolders(folderid: number): Promise<any[]> {
-		this.redis.hgetall(`valkyrie:folders:${folderid}*:*`);
+	async getFolders(folderid: number): Promise<Folder[]> {
+		let result = await this.redis.hgetall(`valkyrie:folders:${folderid}*:*`);
 		return [];
 	}
 
 	async getFlows(folderid?: number): Promise<Flow[]> {
 		const stream = this.redis.scanStream({
-			match: `${process.env.APP}:folders:${folderid ?? '*'}:flows:*`,
+			match: `valkyrie:folders:${folderid ?? '*'}:flows:*`,
 			type: 'zset',
 			count: 1000,
 		});
@@ -65,14 +87,16 @@ export class Valkyrie {
 				.on('end', async () => {
 					const results = await pipeline.exec();
 
-					const flows = (results ?? []).map(([err, result]) => {
+					const flows = results?.map(([err, result]) => {
 						if (err) reject(err);
 
 						let flowArr = result as any[];
 
 						let flowData = JSON.parse(flowArr[0]);
 
-						let actions = flowArr.slice(1).map((a: string) => {});
+						let actions = flowArr
+							.slice(1)
+							.map((a: string) => JSON.parse(a) as ActionBase);
 
 						return new Flow({
 							...flowData,
@@ -80,7 +104,7 @@ export class Valkyrie {
 						});
 					});
 
-					resolve(flows);
+					resolve(flows ?? []);
 				})
 				.on('error', (error) => {
 					reject(error);

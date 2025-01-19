@@ -31,6 +31,7 @@ export abstract class ActionBase implements IAction<ActionResult> {
 	public flow!: Flow;
 	public conditions: ConditionBase[] = [];
 	public options: ActionBaseOptions = {};
+	public abstract action(prevResults: ActionResult[]): Promise<ActionResult>;
 
 	constructor(args: IAction<ActionResult>) {
 		Object.assign(this, args);
